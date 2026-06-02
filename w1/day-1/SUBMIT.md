@@ -25,7 +25,7 @@ Ghi chú: IQR chọn ngưỡng tốt nhất theo F1 là `IQR (2.0)`; Isolation F
 Model Isolation Forest đã train được lưu tại:
 
 ```text
-isolation_forest_model.pkl
+resource/isolation_forest_model.pkl
 ```
 
 Kích thước artifact: `2170.94 KB`.

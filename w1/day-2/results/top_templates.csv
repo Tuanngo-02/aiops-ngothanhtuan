@@ -1,0 +1,11 @@
+template_id,template,count
+1,Connection timeout to <*> at <*> after <*>,3
+2,Token validated for userId=USR-442918 in 12ms,1
+3,Request completed /api/payment status=500 duration=30125ms,1
+4,<*> <*> <*> INFO dfs.DataNode$PacketResponder: PacketResponder <*> for block <*> terminating,622
+5,<*> <*> <*> INFO dfs.FSNamesystem: BLOCK* NameSystem.addStoredBlock: blockMap updated: <*> is added to <*> size <*>,628
+6,<*> <*> <*> INFO dfs.DataNode$PacketResponder: Received block <*> of size <*> from <*>,584
+7,<*> <*> <*> INFO dfs.DataNode$DataXceiver: Receiving block <*> src: <*> dest: <*>,584
+8,<*> <*> <*> INFO dfs.FSNamesystem: BLOCK* NameSystem.allocateBlock: <*> <*>,230
+9,<*> <*> 13 INFO dfs.DataBlockScanner: Verification succeeded for <*>,40
+10,<*> <*> <*> INFO dfs.FSDataset: Deleting block <*> file <*>,526
