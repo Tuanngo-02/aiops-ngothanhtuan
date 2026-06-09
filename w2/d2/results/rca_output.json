@@ -1,56 +1,33 @@
 {
-  "clusters_analyzed": 2,
+  "clusters_analyzed": 1,
   "results": [
     {
       "cluster_id": "c-000-000",
       "graph_top3": [
         [
+          "payment-svc",
+          0.63
+        ],
+        [
           "checkout-svc",
-          0.51
+          0.55
         ],
         [
           "edge-lb",
-          0.47
-        ],
-        [
-          "payment-svc",
-          0.44
+          0.42
         ]
       ],
-      "root_cause": "checkout-svc",
+      "root_cause": "payment-svc",
       "class": "infinite_retry",
-      "confidence": 0.43,
+      "confidence": 0.5,
       "actions": [
         "Add circuit breaker (Hystrix-style) 50% error → open",
         "Cap retry = 3."
       ],
-      "reasoning": "Root cause suspected at [checkout-svc] via system dependency tracking. Cluster symptoms highly correlate with historical outage [INC-2025-10-15] classified under root cause class 'infinite_retry'.",
+      "reasoning": "Root cause suspected at [payment-svc] via system dependency tracking. Cluster symptoms highly correlate with historical outage [INC-2025-10-15] classified under root cause class 'infinite_retry'.",
       "similar_incidents": [
         "INC-2025-10-15",
         "INC-2025-11-08"
-      ],
-      "method": "graph+rag_knn"
-    },
-    {
-      "cluster_id": "c-001-000",
-      "graph_top3": [
-        [
-          "payment-svc",
-          1.0
-        ]
-      ],
-      "root_cause": "payment-svc",
-      "class": "connection_pool_exhaustion",
-      "confidence": 0.71,
-      "actions": [
-        "Rollback to v3.1",
-        "Scale pool 50 → 100 cushion",
-        "Add pool monitor alert > 80%."
-      ],
-      "reasoning": "Root cause suspected at [payment-svc] via system dependency tracking. Cluster symptoms highly correlate with historical outage [INC-2025-11-08] classified under root cause class 'connection_pool_exhaustion'.",
-      "similar_incidents": [
-        "INC-2025-11-08",
-        "INC-2025-10-15"
       ],
       "method": "graph+rag_knn"
     }
