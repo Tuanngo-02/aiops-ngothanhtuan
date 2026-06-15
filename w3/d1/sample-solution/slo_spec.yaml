@@ -1,0 +1,49 @@
+version: 1
+services:
+  - name: api
+    sli:
+      name: api_availability
+      kind: availability
+      formula: "count(http_requests_total{status!~'5..|429'}) / count(http_requests_total)"
+      promql_good: "sum(rate(http_requests_total{status!~'5..|429'}[5m]))"
+      promql_total: "sum(rate(http_requests_total[5m]))"
+      source: "data/access_log.jsonl"
+    slo:
+      target: 0.9750
+      window_days: 30
+    budget:
+      total_events_per_month: 20737800 # 691260 events_per_day * 30
+      allowed_failures_per_month: 518445 # (1 - 0.9750) * 20737800
+      downtime_minutes_equivalent: 1080 # 518445 / (20737800 / 43200 phút) = 30 ngày * 0.025 * 1440 phút
+
+  - name: frontend
+    sli:
+      name: frontend_availability
+      kind: availability
+      formula: "count(frontend_rum_events{error='false'}) / count(frontend_rum_events)"
+      promql_good: "sum(rate(frontend_rum_events{error='false'}[5m]))"
+      promql_total: "sum(rate(frontend_rum_events[5m]))"
+      source: "data/frontend_rum.jsonl"
+    slo:
+      target: 0.9850
+      window_days: 30
+    budget:
+      total_events_per_month: 5184000 # 172800 events_per_day * 30
+      allowed_failures_per_month: 77760 # (1 - 0.9850) * 5184000
+      downtime_minutes_equivalent: 648 # 30 ngày * 0.015 * 1440 phút
+
+  - name: db
+    sli:
+      name: db_query_availability
+      kind: availability
+      formula: "count(pg_stat_statements{status='success'}) / count(pg_stat_statements)"
+      promql_good: "sum(rate(pg_stat_statements{status='success'}[5m]))"
+      promql_total: "sum(rate(pg_stat_statements[5m]))"
+      source: "data/db_query_log.jsonl"
+    slo:
+      target: 0.9940
+      window_days: 30
+    budget:
+      total_events_per_month: 1726380 # 57546 events_per_day * 30
+      allowed_failures_per_month: 10358 # (1 - 0.9940) * 1726380
+      downtime_minutes_equivalent: 259 # 30 ngày * 0.006 * 1440 phút

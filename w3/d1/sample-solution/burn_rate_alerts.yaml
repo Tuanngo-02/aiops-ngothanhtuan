@@ -1,0 +1,108 @@
+groups:
+  # =========================================================================
+  # 1. API SLO ALERTS (Target: 97.5% -> Error Budget: 0.025)
+  # =========================================================================
+  - name: api-slo
+    rules:
+      # Tier 1: Sự cố nghiêm trọng, đốt 2% budget trong 1 giờ (Burn rate >= 14.4) -> PAGE
+      - alert: api_burn_rate_tier1
+        expr: |
+          ((sum(rate(http_requests_total{status=~"5..|429"}[1h])) / sum(rate(http_requests_total[1h]))) / 0.025 >= 14.4)
+          AND
+          ((sum(rate(http_requests_total{status=~"5..|429"}[5m])) / sum(rate(http_requests_total[5m]))) / 0.025 >= 14.4)
+        labels: { severity: page, tier: "1" }
+        annotations:
+          summary: "API critical budget burn rate (Tier 1)"
+          description: "API is burning budget at rate {{ $value }}, exhausting in less than 50 hours."
+
+      # Tier 2: Sự cố vừa phải, đốt 5% budget trong 6 giờ (Burn rate >= 6) -> PAGE
+      - alert: api_burn_rate_tier2
+        expr: |
+          ((sum(rate(http_requests_total{status=~"5..|429"}[6h])) / sum(rate(http_requests_total[6h]))) / 0.025 >= 6)
+          AND
+          ((sum(rate(http_requests_total{status=~"5..|429"}[30m])) / sum(rate(http_requests_total[30m]))) / 0.025 >= 6)
+        labels: { severity: page, tier: "2" }
+        annotations:
+          summary: "API high budget burn rate (Tier 2)"
+          description: "API is burning budget at rate {{ $value }}, exhausting in less than 5 days."
+
+      # Tier 3: Lò rò rỉ ngầm, đốt 100% budget trong 30 ngày (Burn rate >= 1) -> TICKET
+      - alert: api_burn_rate_tier3
+        expr: |
+          ((sum(rate(http_requests_total{status=~"5..|429"}[3d])) / sum(rate(http_requests_total[3d]))) / 0.025 >= 1)
+          AND
+          ((sum(rate(http_requests_total{status=~"5..|429"}[6h])) / sum(rate(http_requests_total[6h]))) / 0.025 >= 1)
+        labels: { severity: ticket, tier: "3" }
+        annotations:
+          summary: "API low sustained budget burn rate (Tier 3)"
+          description: "API is burning budget at rate {{ $value }}. Budget will exhaust before 30 days if unchecked."
+
+  # =========================================================================
+  # 2. FRONTEND SLO ALERTS (Target: 98.5% -> Error Budget: 0.015)
+  # =========================================================================
+  - name: frontend-slo
+    rules:
+      # Tier 1: Burn rate >= 14.4 -> PAGE
+      - alert: frontend_burn_rate_tier1
+        expr: |
+          ((sum(rate(frontend_rum_events{error="true"}[1h])) / sum(rate(frontend_rum_events[1h]))) / 0.015 >= 14.4)
+          AND
+          ((sum(rate(frontend_rum_events{error="true"}[5m])) / sum(rate(frontend_rum_events[5m]))) / 0.015 >= 14.4)
+        labels: { severity: page, tier: "1" }
+        annotations:
+          summary: "Frontend critical budget burn rate (Tier 1)"
+
+      # Tier 2: Burn rate >= 6 -> PAGE
+      - alert: frontend_burn_rate_tier2
+        expr: |
+          ((sum(rate(frontend_rum_events{error="true"}[6h])) / sum(rate(frontend_rum_events[6h]))) / 0.015 >= 6)
+          AND
+          ((sum(rate(frontend_rum_events{error="true"}[30m])) / sum(rate(frontend_rum_events[30m]))) / 0.015 >= 6)
+        labels: { severity: page, tier: "2" }
+        annotations:
+          summary: "Frontend high budget burn rate (Tier 2)"
+
+      # Tier 3: Burn rate >= 1 -> TICKET
+      - alert: frontend_burn_rate_tier3
+        expr: |
+          ((sum(rate(frontend_rum_events{error="true"}[3d])) / sum(rate(frontend_rum_events[3d]))) / 0.015 >= 1)
+          AND
+          ((sum(rate(frontend_rum_events{error="true"}[6h])) / sum(rate(frontend_rum_events{6h]))) / 0.015 >= 1)
+        labels: { severity: ticket, tier: "3" }
+        annotations:
+          summary: "Frontend low sustained budget burn rate (Tier 3)"
+
+  # =========================================================================
+  # 3. DATABASE SLO ALERTS (Target: 99.4% -> Error Budget: 0.006)
+  # =========================================================================
+  - name: db-slo
+    rules:
+      # Tier 1: Burn rate >= 14.4 -> PAGE
+      - alert: db_burn_rate_tier1
+        expr: |
+          ((sum(rate(pg_stat_statements{status="fail"}[1h])) / sum(rate(pg_stat_statements[1h]))) / 0.006 >= 14.4)
+          AND
+          ((sum(rate(pg_stat_statements{status="fail"}[5m])) / sum(rate(pg_stat_statements[5m]))) / 0.006 >= 14.4)
+        labels: { severity: page, tier: "1" }
+        annotations:
+          summary: "Database critical budget burn rate (Tier 1)"
+
+      # Tier 2: Burn rate >= 6 -> PAGE
+      - alert: db_burn_rate_tier2
+        expr: |
+          ((sum(rate(pg_stat_statements{status="fail"}[6h])) / sum(rate(pg_stat_statements[6h]))) / 0.006 >= 6)
+          AND
+          ((sum(rate(pg_stat_statements{status="fail"}[30m])) / sum(rate(pg_stat_statements[30m]))) / 0.006 >= 6)
+        labels: { severity: page, tier: "2" }
+        annotations:
+          summary: "Database high budget burn rate (Tier 2)"
+
+      # Tier 3: Burn rate >= 1 -> TICKET
+      - alert: db_burn_rate_tier3
+        expr: |
+          ((sum(rate(pg_stat_statements{status="fail"}[3d])) / sum(rate(pg_stat_statements[3d]))) / 0.006 >= 1)
+          AND
+          ((sum(rate(pg_stat_statements{status="fail"}[6h])) / sum(rate(pg_stat_statements[6h]))) / 0.006 >= 1)
+        labels: { severity: ticket, tier: "3" }
+        annotations:
+          summary: "Database low sustained budget burn rate (Tier 3)"
