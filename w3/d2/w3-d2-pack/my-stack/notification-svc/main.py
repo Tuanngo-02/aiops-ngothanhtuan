@@ -1,0 +1,46 @@
+from fastapi import FastAPI, Request
+from prometheus_client import generate_latest, Counter, Histogram
+import uvicorn
+import time
+import random
+
+app = FastAPI()
+
+REQUEST_COUNT = Counter(
+    'notification_svc_requests_total', 'Total number of requests to notification service', ['endpoint']
+)
+REQUEST_LATENCY = Histogram(
+    'notification_svc_request_duration_seconds', 'Histogram of request duration to notification service',
+    ['endpoint']
+)
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    REQUEST_LATENCY.labels(endpoint=request.url.path).observe(process_time)
+    REQUEST_COUNT.labels(endpoint=request.url.path).inc()
+    return response
+
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to Notification Service!"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
+@app.post("/notify")
+async def send_notification(message: dict):
+    # Simulate sending notification
+    print(f"Sending notification: {message}")
+    time.sleep(random.uniform(0.05, 0.1))
+    return {"status": "notification sent", "message_id": f"msg_{int(time.time())}"}
+
+@app.get("/metrics")
+async def metrics():
+    return generate_latest()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8003)

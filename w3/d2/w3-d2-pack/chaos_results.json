@@ -1,0 +1,86 @@
+[
+  {
+    "experiment_id": 3,
+    "name": "inventory_pod_kill",
+    "timestamp": 1781667463,
+    "hypothesis": "Steady-state: inventory-svc availability >= 99.9%.\nKill an inventory-svc pod every 60s for 3 minutes.\nPipeline detects availability drop and RCA points to inventory-svc.\n",
+    "ground_truth": {
+      "expected_root_service": "inventory-svc",
+      "expected_fault_class": "availability"
+    },
+    "measured_metrics": {
+      "probe_results": {
+        "pass_rate": 0.0,
+        "avg_latency_ms": 0.0,
+        "fail_count": 0
+      },
+      "alerts": [],
+      "correlation": {
+        "cluster_id": "mock-cluster-abc",
+        "events_count": 10
+      },
+      "rca": {
+        "root_service": "unknown",
+        "confidence": 0.0,
+        "evidence": []
+      }
+    },
+    "pass": false
+  },
+  {
+    "experiment_id": 4,
+    "name": "api_gateway_cpu_stress",
+    "timestamp": 1781667523,
+    "hypothesis": "Steady-state: p99 latency across all downstream services < 500ms.\nStress api-gateway CPU to 90% for 120s.\nObserve cascade latency increase in downstream services.\nRCA should identify api-gateway as the bottleneck.\n",
+    "ground_truth": {
+      "expected_root_service": "api-gateway",
+      "expected_fault_class": "cascade_latency"
+    },
+    "measured_metrics": {
+      "probe_results": {
+        "pass_rate": 0.0,
+        "avg_latency_ms": 0.0,
+        "fail_count": 0
+      },
+      "alerts": [],
+      "correlation": {
+        "cluster_id": "mock-cluster-abc",
+        "events_count": 10
+      },
+      "rca": {
+        "root_service": "unknown",
+        "confidence": 0.0,
+        "evidence": []
+      }
+    },
+    "pass": false
+  },
+  {
+    "experiment_id": 8,
+    "name": "frontend_network_partition",
+    "timestamp": 1781667583,
+    "hypothesis": "Steady-state: frontend is accessible.\nCreate a full network partition on frontend for 30s.\nObserve frontend timeouts and unavailability.\nRCA should identify frontend or api-gateway as the edge.\n",
+    "ground_truth": {
+      "expected_root_service": "frontend",
+      "expected_fault_class": "network_partition"
+    },
+    "measured_metrics": {
+      "probe_results": {
+        "pass_rate": 0.0,
+        "avg_latency_ms": 0.0,
+        "fail_count": 0
+      },
+      "alerts": [],
+      "correlation": {
+        "cluster_id": "mock-cluster-abc",
+        "events_count": 10
+      },
+      "rca": {
+        "root_service": "unknown",
+        "confidence": 0.0,
+        "evidence": []
+      }
+    },
+    "pass": false
+  }
+]

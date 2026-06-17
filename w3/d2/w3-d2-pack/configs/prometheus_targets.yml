@@ -1,0 +1,12 @@
+- targets:
+  - 'api-gateway:8080'
+  - 'payment-svc:8000'
+  - 'inventory-svc:8000'
+  - 'notification-svc:8000'
+  - 'checkout-svc:8000'
+  - 'auth-svc:8000'
+  - 'log-collector:8000'
+  - 'dns-resolver:8000'
+  - 'cache-svc:8000'
+  - 'frontend:80'
+  - 'aiops-pipeline:8000'
