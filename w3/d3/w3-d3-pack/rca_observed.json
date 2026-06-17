@@ -1,0 +1,75 @@
+{
+  "query_params": {
+    "window_start": "2026-06-17T03:35:00Z",
+    "window_end": "2026-06-17T03:45:00Z",
+    "pipeline_endpoint": "http://localhost:8000/rca"
+  },
+  "rca_result": {
+    "identified_root_cause": {
+      "service": "inventory-svc",
+      "confidence": 0.72,
+      "failure_type": "availability",
+      "first_failure_timestamp": "2026-06-17T03:35:08Z",
+      "reasoning": "inventory-svc was the first service to exhibit error rate spike (0% → 85% at T+8s). Temporal correlation shows downstream failures (checkout-svc at T+25s, api-gateway at T+42s) followed inventory-svc failure."
+    },
+    "affected_services": [
+      {
+        "service": "inventory-svc",
+        "impact": "primary",
+        "error_rate_peak": 0.85,
+        "latency_peak_ms": null,
+        "failure_start": "2026-06-17T03:35:08Z"
+      },
+      {
+        "service": "checkout-svc",
+        "impact": "cascading",
+        "error_rate_peak": 0.62,
+        "latency_peak_ms": 12000,
+        "failure_start": "2026-06-17T03:35:25Z"
+      },
+      {
+        "service": "api-gateway",
+        "impact": "cascading",
+        "error_rate_peak": 0.35,
+        "latency_peak_ms": 8500,
+        "failure_start": "2026-06-17T03:35:42Z"
+      },
+      {
+        "service": "cache-svc",
+        "impact": "secondary",
+        "error_rate_peak": 0.05,
+        "latency_peak_ms": 200,
+        "failure_start": "2026-06-17T03:36:15Z"
+      }
+    ],
+    "dependency_chain_detected": [
+      "inventory-svc → checkout-svc → api-gateway"
+    ],
+    "missed_patterns": [
+      {
+        "pattern": "Capacity exhaustion root cause",
+        "description": "Pipeline identified inventory-svc as root cause (correct service) but could not identify that the root cause was capacity/index subsystem failure within the service. RCA stopped at service level, not resource level."
+      },
+      {
+        "pattern": "Recovery oscillation",
+        "description": "Pipeline did not detect the recovery-then-re-failure pattern (T+2min: 30% error → T+3min: 80% error). The restart attempt made things worse because the index rebuild consumed resources, but pipeline treated each failure independently."
+      },
+      {
+        "pattern": "payment-svc queue buildup",
+        "description": "payment-svc was affected (queue depth grew) but pipeline did not detect this because only HTTP error rate is monitored, not internal queue metrics."
+      }
+    ]
+  },
+  "comparison_with_expected": {
+    "detection_time_target": "< 30s",
+    "actual_first_detection": "18s",
+    "detection_met": true,
+    "root_service_correct": true,
+    "root_cause_granularity": "service-level only (missed resource-level: index/capacity)",
+    "cascading_pattern_detected": "partial — individual alerts fired but not correlated as single cascading incident",
+    "gaps": [
+      "GAP-1: No resource-level RCA — pipeline cannot distinguish between 'service down' vs 'capacity exhaustion' vs 'dependency failure' within a service",
+      "GAP-2: No cascading failure correlation — 7 individual alerts fired instead of 1 correlated incident with dependency chain"
+    ]
+  }
+}
