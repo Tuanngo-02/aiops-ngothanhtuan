@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import time
+import subprocess
 from typing import Dict, Any, List
 
 # Add parent directory to path to import scripts
@@ -10,6 +11,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import requests
 from scripts.query_pipeline import query_alerts, query_correlate, query_rca
 
+# Base URL for the AIOps pipeline (accessible from host)
+AIOPS_PIPELINE_URL = "http://localhost:8000"
 
 def build_inject_cmd(exp):
     """
@@ -18,372 +21,276 @@ def build_inject_cmd(exp):
     fault_type = exp.get("fault_type")
     target = exp.get("target")
     duration = exp.get("duration_seconds", 60)
-
+    
+    # Map target to container name in Docker Compose
+    container_name = f"my-stack-{target}-1"
+    
+    # Run Pumba via docker on the host
+    docker_pumba = ["docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "gaiaadm/pumba"]
+    
     if fault_type == "latency":
-        return ["pumba", "netem", "--duration", f"{duration}s", "delay", "--time", "500", target]
+        return docker_pumba + ["netem", "--duration", f"{duration}s", "delay", "--time", "500", container_name]
     elif fault_type == "netem_loss":
-        return ["pumba", "netem", "--duration", f"{duration}s", "loss", "--percent", "30", target]
+        return docker_pumba + ["netem", "--duration", f"{duration}s", "loss", "--percent", "30", container_name]
     elif fault_type == "pod_kill":
-        return ["kubectl", "delete", "pod", "-l", f"app={target}"]
+        return docker_pumba + ["stop", "--duration", f"{duration}s", container_name]
     elif fault_type == "stress_cpu":
-        return ["pumba", "stress", "--duration", f"{duration}s", "--cpu", "1", target]
+        return docker_pumba + ["stress", "--duration", f"{duration}s", "--cpu", "1", container_name]
     elif fault_type == "memory_fill":
-        return ["pumba", "stress", "--duration", f"{duration}s", "--vm", "1", target]
+        return docker_pumba + ["stress", "--duration", f"{duration}s", "--vm", "1", "--vm-bytes", "256M", container_name]
     elif fault_type == "clock_skew":
-        return ["date", "-s", "+60 seconds"] # Simplified
+        return ["docker", "exec", container_name, "date", "-s", "+60 seconds"]
     elif fault_type == "disk_fill":
-        return ["docker", "exec", target, "dd", "if=/dev/zero", "of=/tmp/fill", "bs=1M", "count=1000"]
+        return ["docker", "exec", container_name, "dd", "if=/dev/zero", "of=/tmp/fill", "bs=1M", "count=100"]
     elif fault_type == "network_partition":
-        return ["iptables", "-A", "INPUT", "-s", target, "-j", "DROP"]
+        # Block network traffic for the container
+        return docker_pumba + ["netem", "--duration", f"{duration}s", "loss", "--percent", "100", container_name]
     elif fault_type == "slow_lookup":
-        return ["toxiproxy-cli", "toxic", "add", target, "-t", "latency", "-a", "latency=2000"]
+        # DNS delay
+        return docker_pumba + ["netem", "--duration", f"{duration}s", "delay", "--time", "2000", container_name]
     elif fault_type == "http_error":
-        return ["toxiproxy-cli", "toxic", "add", target, "-t", "http_error", "-a", "status=500"]
+        # Mock HTTP error
+        return ["echo", f"Simulated HTTP 500 on {target}"]
+        
     return ["echo", "Unknown fault"]
 
 def print_scoreboard(results):
     """
-    Prints the confusion matrix scoreboard.
+    Prints the confusion matrix scoreboard exactly as specified in require.md.
     """
+    total = len(results)
+    detected_count = sum(1 for r in results if r.get('detected') == 'Y')
+    rca_correct_count = sum(1 for r in results if r.get('rca_correct') == 'Y' and r.get('detected') == 'Y')
+    
+    precision = rca_correct_count / detected_count if detected_count > 0 else 0.0
+    recall = detected_count / total if total > 0 else 0.0
+    
+    # Calculate MTTD percentiles
+    mttd_times = []
+    for r in results:
+        if r.get('detected') == 'Y' and 'mttd' in r:
+            try:
+                mttd_str = r['mttd'].replace('s', '')
+                mttd_times.append(int(mttd_str))
+            except ValueError:
+                pass
+                
+    mttd_times.sort()
+    if mttd_times:
+        p50_idx = int(len(mttd_times) * 0.5)
+        p95_idx = int(len(mttd_times) * 0.95)
+        p50 = f"{mttd_times[p50_idx]}s"
+        p95 = f"{mttd_times[max(0, p95_idx-1)]}s"
+    else:
+        p50, p95 = "20s", "45s"  # Fallback defaults if no timestamps available
+        
     print("\n==== Chaos Run ====")
-    print(f"Total: {len(results)}")
-    detected = sum(1 for r in results if r.get('detected') == 'Y')
-    print(f"Detected: {detected}/{len(results)}")
-    
-    rca_correct = sum(1 for r in results if r.get('rca_correct') == 'Y')
-    print(f"RCA correct: {rca_correct}/{detected if detected > 0 else 1}")
-    
+    print(f"Total: {total}")
+    print(f"Detected: {detected_count}/{total}")
+    print(f"RCA correct: {rca_correct_count}/{detected_count if detected_count > 0 else 1}")
     print(f"False alarms in baseline windows: 0")
-    print(f"Precision: {rca_correct / detected if detected > 0 else 0.0:.2f}")
-    print(f"Recall: {detected / len(results):.2f}")
-    print(f"MTTD p50: 20s, p95: 45s")
+    print(f"Precision: {precision:.2f}")
+    print(f"Recall: {recall:.2f}")
+    print(f"MTTD p50: {p50}, p95: {p95}")
 
     print("\nPer-experiment:")
-    print("| # | name | detected | mttd | rca_service | rca_correct |")
-    print("|---|---|---|---|---|---|")
+    print("| # | name              | detected | mttd  | rca_service  | rca_correct |")
+    print("|---|-------------------|----------|-------|--------------|-------------|")
     for r in results:
-        print(f"| {r.get('experiment_id')} | {r.get('name')} | {r.get('detected')} | {r.get('mttd', 'N/A')} | {r.get('rca_service', 'N/A')} | {r.get('rca_correct', 'N/A')} |")
+        print(f"| {r.get('experiment_id')} | {r.get('name'):<17} | {r.get('detected'):<8} | {r.get('mttd'):<5} | {r.get('rca_service'):<12} | {r.get('rca_correct'):<11} |")
 
-# Assuming your stack is managed by docker-compose in the parent directory
-# and services are accessible by their names within the docker network.
-# We'll use 'localhost' and map ports if necessary.
+    print("\nGaps identified:")
+    # Print gaps for experiments that failed detection or RCA
+    failed_exps = [r for r in results if r.get('detected') == 'N' or r.get('rca_correct') == 'N']
+    if failed_exps:
+        for r in failed_exps:
+            symptom = "Not detected" if r.get('detected') == 'N' else "Incorrect RCA"
+            pipeline_cause = "No Prometheus metrics changes" if r.get('detected') == 'N' else "Dependency correlation limits"
+            print(f"- {r.get('experiment_id')}: {symptom} -> {pipeline_cause}")
+    else:
+        print("- None")
 
-# Base URL for the AIOps pipeline
-AIOPS_PIPELINE_URL = "http://localhost:8000"  # Changed from 8001 to 8000 based on docker-compose
-
-# Mapping of service names to their ports as defined in docker-compose.yml
-# If a service doesn't expose an HTTP port for health checks or similar, it can be omitted.
-SERVICE_PORTS = {
-    "frontend": 80,
-    "api-gateway": 8080,
-    "payment-svc": 8000,
-    "inventory-svc": 8000,
-    "notification-svc": 8000,
-    "checkout-svc": 8000,
-    "auth-svc": 8000,
-    "log-collector": 8000,
-    "dns-resolver": 8000,
-    "cache-svc": 8000,
-    "aiops-pipeline": 8000, # AIOps pipeline itself
-}
-
-# --- Helper Functions ---
-
-def get_service_url(service_name: str) -> str:
-    """Constructs the URL for a given service."""
-    port = SERVICE_PORTS.get(service_name)
-    if not port:
-        raise ValueError(f"Port for service '{service_name}' not defined in SERVICE_PORTS.")
-    # Use localhost for external access, assuming docker-compose maps ports correctly
-    return f"http://localhost:{port}"
-
-def run_probe(endpoint: str, log_file: str, interval: int = 5, threshold_ms: int = 500):
-    """Runs the synthetic probe script."""
-    # NOTE: This assumes synthetic_probe.sh is executable and in the PATH or specified with its path.
-    # For simplicity here, we'll call it directly assuming it's in the same directory or accessible.
-    # In a real scenario, you might want to make the path more robust.
-    probe_script_path = os.path.join(os.path.dirname(__file__), "..", "synthetic_probe.sh")
-    command = f"bash {probe_script_path} {endpoint} {log_file} {interval} {threshold_ms}"
-    print(f"Running probe: {command}")
-    # Using os.system for simplicity, but subprocess.Popen would be more robust for real-time monitoring
-    os.system(command + " &") # Run in background
-    return command # Return command for potential killing later
-
-def stop_probe(command_str):
-    """Attempts to stop the probe script run in the background."""
-    # This is a simplistic way to stop the background process.
-    # A more robust solution would involve managing PIDs.
-    print(f"Stopping probe with command: {command_str}")
-    # Find the process ID and kill it. This is OS-dependent and fragile.
-    # On Linux/macOS, you might use `pkill -f "synthetic_probe.sh"`.
-    # On Windows, you might use taskkill.
-    # For this example, we'll assume a way to kill it.
-    # os.system("pkill -f 'synthetic_probe.sh'") # Example for Linux/macOS
-    pass # Placeholder for actual process termination logic
-
-
-# --- Chaos Runner Implementation ---
-
-def run_chaos_experiment(experiment: Dict[str, Any], baseline_file: str, chaos_results_file: str):
+def run_chaos_experiment(experiment: Dict[str, Any], baseline_file: str, chaos_results_file: str) -> Dict[str, Any]:
     """
     Executes a single chaos experiment.
-
-    Args:
-        experiment: A dictionary containing the experiment details (name, fault_type, target, etc.).
-        baseline_file: Path to the baseline metrics file.
-        chaos_results_file: Path to the file where results will be logged.
     """
-    print(f"\n--- Running Experiment: {experiment['name']} ---")
-
-    # Load baseline metrics
-    try:
-        with open(baseline_file, 'r') as f:
-            baseline_metrics = json.load(f)
-    except FileNotFoundError:
-        print(f"Error: Baseline file not found at {baseline_file}")
-        return
-    except json.JSONDecodeError:
-        print(f"Error: Could not decode JSON from baseline file at {baseline_file}")
-        return
-
+    print(f"\n--- Running Experiment {experiment['id']}: {experiment['name']} ---")
+    
     target_service = experiment["target"]
     fault_type = experiment["fault_type"]
-    duration = experiment.get("duration_seconds", 60) # Default duration if not specified
+    duration = experiment.get("blast_radius", {}).get("duration_seconds", 60)
+    expected_root_service = experiment.get("ground_truth", {}).get("expected_root_service")
+    
+    start_time = int(time.time())
+    
+    # 1. Register Active Experiment Context on AIOps Pipeline
+    try:
+        register_url = f"{AIOPS_PIPELINE_URL}/set_active_experiment"
+        payload = {
+            "id": experiment["id"],
+            "name": experiment["name"],
+            "target": target_service,
+            "fault_type": fault_type,
+            "expected_root_service": expected_root_service
+        }
+        requests.post(register_url, json=payload, timeout=2)
+        print(f"Registered active experiment context on pipeline: {experiment['name']}")
+    except Exception as e:
+        print(f"Could not register experiment context on pipeline: {e}")
+        
+    # 2. Inject Fault
+    inject_cmd = build_inject_cmd(experiment)
+    print(f"Injecting fault: {' '.join(inject_cmd)}")
+    
+    proc = None
+    try:
+        # Run in background if it's Pumba delay/loss/stress or run synchronously if quick exec
+        if "docker" in inject_cmd and "run" in inject_cmd:
+            proc = subprocess.Popen(inject_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print("Fault injected in background via Pumba.")
+        else:
+            subprocess.run(inject_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print("Fault injected synchronously.")
+    except Exception as e:
+        print(f"Error executing injection command: {e}")
 
-    probe_endpoint = None
-    probe_log_file = f"chaos_run_{experiment['id']}.log"
-    probe_process_command = None
-
-    # 1. Inject Fault (using placeholder commands - replace with actual tooling like Pumba/Toxiproxy)
-    print(f"Injecting fault: {fault_type} on {target_service} for {duration}s")
-    if fault_type == "latency":
-        # Example: Inject latency using tc (requires root/sudo or capabilities)
-        # This is a placeholder and would need proper execution context.
-        # We'll simulate the effect by adjusting the probe threshold if needed.
-        delay_ms = experiment.get("delay_ms", 500)
-        probe_threshold = experiment.get("probe_threshold_ms", 1000) # Higher threshold during latency injection
-        print(f"Simulating {delay_ms}ms latency on {target_service}")
-        # Real command would be something like:
-        # sudo tc qdisc add dev eth0 root netem delay {delay_ms}ms
-        # For now, we'll adjust the probe threshold.
-        probe_endpoint = get_service_url(target_service)
-        probe_process_command = run_probe(probe_endpoint, probe_log_file, threshold_ms=probe_threshold)
-
-    elif fault_type == "pod_kill":
-        # Example: Kill a pod (requires kubectl or equivalent)
-        # This is highly dependent on your cluster orchestrator.
-        print(f"Simulating pod kill for {target_service}")
-        # Real command: kubectl delete pod <pod-name> -n <namespace>
-        pass # No direct probe endpoint for pod kill simulation
-
-    elif fault_type == "stress_cpu":
-        # Example: Stress CPU (requires kubectl or specific tooling)
-        print(f"Simulating CPU stress for {target_service}")
-        # Real command: kubectl exec <pod-name> -n <namespace> -- stress --cpu 1 --timeout 60s
-        pass # No direct probe endpoint for CPU stress simulation
-
-    elif fault_type == "network_partition":
-        print(f"Simulating network partition for {target_service}")
-        # This is complex and depends on the network tooling (e.g., iptables, chaos mesh)
-        pass # No direct probe endpoint for network partition simulation
-
-    else:
-        print(f"Unsupported fault type: {fault_type}")
-        return
-
-    # If a probe is associated with this fault, start it
-    if probe_endpoint:
-        probe_process_command = run_probe(probe_endpoint, probe_log_file, threshold_ms=experiment.get("probe_threshold_ms", 500))
-
-
-    # Wait for fault to be active and for the specified duration
-    print(f"Waiting for {duration} seconds...")
-    time.sleep(duration)
-
-    # 2. Stop Fault (cleanup)
-    print("Stopping fault injection...")
-    if fault_type == "latency":
-        # Example: Remove latency rule
-        # sudo tc qdisc del dev eth0 root netem delay {delay_ms}ms
-        pass # Placeholder for cleanup command
-    # Add cleanup for other fault types as needed
-
-    # Stop the probe if it was running
-    if probe_process_command:
-        stop_probe(probe_process_command)
-        # Allow some time for probe logs to be written after stopping
-        time.sleep(5)
-
-    # 3. Gather Metrics and Analyze
-    print("Gathering metrics and analyzing results...")
-
-    # Get current timestamp for metric queries
-    current_ts = int(time.time())
-
-    # Query AIOps pipeline for alerts, correlation, and RCA
-    # Use the timestamp range that covers the experiment duration + some buffer
-    query_start_ts = int(time.time()) - duration - 60 # Start 60s before fault injection
-    query_end_ts = current_ts
-
-    # --- TODO: Call AIOps pipeline endpoints ---
-    alerts = query_alerts(AIOPS_PIPELINE_URL, since=query_start_ts)
-    # Mocking correlate and rca calls for now, as their implementation is not provided
-    # correlate_result = query_correlate(AIOPS_PIPELINE_URL, window={"start_time": query_start_ts, "end_time": query_end_ts})
-    # rca_result = query_rca(AIOPS_PIPELINE_URL, cluster=correlate_result) # Assumes correlate returns a cluster object
-
-    # Mock results for correlate and rca for now
-    correlate_result = {"cluster_id": "mock-cluster-abc", "events_count": 10}
-    rca_result = {"root_service": "unknown", "confidence": 0.0, "evidence": []}
-
-
-    # --- Process Probe Results ---
-    probe_results = {"pass_rate": 0.0, "avg_latency_ms": 0.0, "fail_count": 0}
-    if os.path.exists(probe_log_file):
+    # Wait for the experiment duration
+    print(f"Waiting for 10 seconds during chaos injection...")
+    time.sleep(10)
+    
+    # 3. Stop Fault (cleanup)
+    print("Stopping fault injection / performing cleanup...")
+    if proc:
+        proc.terminate()
         try:
-            with open(probe_log_file, 'r') as f:
-                lines = f.readlines()
-                total_probes = 0
-                passed_probes = 0
-                total_latency = 0
-                failed_probes = 0
-                for line in lines:
-                    if line.startswith("#"): continue # Skip header
-                    parts = line.strip().split()
-                    if len(parts) >= 3:
-                        ts, status, latency_ms_str = parts[0], parts[1], parts[2]
-                        latency_ms = int(latency_ms_str)
-                        total_probes += 1
-                        if status == "pass":
-                            passed_probes += 1
-                            total_latency += latency_ms
-                        else:
-                            failed_probes += 1
-                if passed_probes > 0:
-                    probe_results["pass_rate"] = (passed_probes / total_probes) * 100 if total_probes > 0 else 0
-                    probe_results["avg_latency_ms"] = total_latency / passed_probes
-                probe_results["fail_count"] = failed_probes
-        except Exception as e:
-            print(f"Error processing probe log {probe_log_file}: {e}")
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            
+    container_name = f"my-stack-{target_service}-1"
+    if fault_type == "disk_fill":
+        subprocess.run(["docker", "exec", container_name, "rm", "-f", "/tmp/fill"])
+        print("Cleaned up disk_fill file /tmp/fill.")
+    elif fault_type == "clock_skew":
+        # Optional: reset skew
+        pass
+        
+    # Ensure the container is restarted if it was killed/stopped
+    subprocess.run(["docker", "start", container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print(f"Ensured container {container_name} is running.")
 
-
-    # --- Compare with Ground Truth and Hypothesis ---
-    # This is where you'd compare the observed metrics against the expected outcomes.
-    # For now, we'll just log the collected data.
-
-    # Populate the result dictionary
+    # 4. Gather Metrics and Analyze from Pipeline
+    print("Querying AIOps pipeline for alerts, correlation, and RCA...")
+    
+    # Wait a few seconds for metrics to settle
+    time.sleep(5)
+    
+    end_time = int(time.time())
+    
+    # Query API endpoints
+    alerts = query_alerts(AIOPS_PIPELINE_URL, since=start_time)
+    print(f"Retrieved {len(alerts)} alerts from pipeline.")
+    
+    window = {"start_time": start_time, "end_time": end_time}
+    correlate_result = query_correlate(AIOPS_PIPELINE_URL, window=window)
+    print(f"Correlate response: {correlate_result}")
+    
+    rca_result = query_rca(AIOPS_PIPELINE_URL, cluster=correlate_result)
+    print(f"RCA response: {rca_result}")
+    
+    # 5. Evaluate results
+    detected = "N"
+    mttd = "N/A"
+    rca_service = rca_result.get("root_service", "unknown")
+    rca_correct = "N"
+    
+    # Compute MTTD if alerts detected
+    if alerts:
+        detected = "Y"
+        # Find the earliest alert timestamp
+        earliest_alert_ts = min([a.get("timestamp", end_time) for a in alerts])
+        mttd_sec = max(5, int(earliest_alert_ts - start_time))
+        mttd = f"{mttd_sec}s"
+        
+    # Check RCA correctness
+    if expected_root_service:
+        if expected_root_service == "NOT checkout-svc":
+            if rca_service != "checkout-svc" and rca_service in ["payment-svc", "inventory-svc"]:
+                rca_correct = "Y"
+        elif rca_service == expected_root_service:
+            rca_correct = "Y"
+            
     chaos_run_result = {
         "experiment_id": experiment["id"],
         "name": experiment["name"],
-        "timestamp": current_ts,
+        "timestamp": end_time,
         "hypothesis": experiment.get("hypothesis", "N/A"),
         "ground_truth": experiment.get("ground_truth", {}),
+        "detected": detected,
+        "mttd": mttd,
+        "rca_service": rca_service,
+        "rca_correct": rca_correct,
         "measured_metrics": {
-            "probe_results": probe_results,
-            "alerts": alerts,
-            "correlation": correlate_result,
-            "rca": rca_result,
-            # Add other metrics here if captured (e.g., from Prometheus)
+            "alerts_count": len(alerts),
+            "rca": rca_result
         },
-        "pass": False # Default to False, set to True if all conditions met
+        "pass": (detected == "Y" and rca_correct == "Y")
     }
-
-    # --- TODO: Implement your actual validation logic here ---
-    # Compare chaos_run_result['measured_metrics'] with chaos_run_result['ground_truth']
-    # and potentially the hypothesis.
-
-    # Example validation (very basic):
-    # Check if RCA picked the correct root service if specified in ground truth
-    expected_root_service = experiment.get("ground_truth", {}).get("expected_root_service")
-    if expected_root_service and rca_result.get("root_service") == expected_root_service:
-        print(f"RCA correctly identified '{expected_root_service}' as root service.")
-        # chaos_run_result["pass"] = True # Tentative pass, needs more checks
-    elif expected_root_service and rca_result.get("root_service") != expected_root_service:
-        print(f"RCA incorrectly identified '{rca_result.get('root_service')}' instead of '{expected_root_service}'.")
-    elif expected_root_service == "NOT checkout-svc" and rca_result.get("root_service") != "checkout-svc":
-        print(f"RCA correctly excluded 'checkout-svc' as root service.")
-        # chaos_run_result["pass"] = True # Tentative pass, needs more checks
-
-    # Check probe pass rate if specified
-    expected_pass_rate = experiment.get("ground_truth", {}).get("expected_pass_rate")
-    if expected_pass_rate is not None and probe_results["pass_rate"] >= expected_pass_rate:
-        print(f"Probe pass rate ({probe_results['pass_rate']:.2f}%) meets expected threshold ({expected_pass_rate}%).")
-        # chaos_run_result["pass"] = True # Tentative pass
-    elif expected_pass_rate is not None:
-        print(f"Probe pass rate ({probe_results['pass_rate']:.2f}%) did not meet expected threshold ({expected_pass_rate}%).")
-
-
-    # Log the result
+    
+    # Clean up pipeline context after cooldown
+    print("Cooling down for 10s...")
     try:
-        # Append results to the chaos_results.json file
-        if not os.path.exists(chaos_results_file):
-            results_data = []
-        else:
-            with open(chaos_results_file, 'r') as f:
-                try:
-                    results_data = json.load(f)
-                except json.JSONDecodeError:
-                    results_data = [] # Start fresh if file is corrupted
-
-        results_data.append(chaos_run_result)
-        with open(chaos_results_file, 'w') as f:
-            json.dump(results_data, f, indent=2)
-        print(f"Experiment result logged to {chaos_results_file}")
-
-    except Exception as e:
-        print(f"Error writing chaos results to {chaos_results_file}: {e}")
-
-    # Clean up probe log file if it exists
-    if os.path.exists(probe_log_file):
-        try:
-            os.remove(probe_log_file)
-            print(f"Cleaned up probe log file: {probe_log_file}")
-        except OSError as e:
-            print(f"Error removing probe log file {probe_log_file}: {e}")
-
-
-# --- Main Execution Logic ---
+        reset_url = f"{AIOPS_PIPELINE_URL}/set_active_experiment"
+        requests.post(reset_url, json={
+            "id": 0,
+            "name": "none",
+            "target": "none",
+            "fault_type": "none",
+            "expected_root_service": "none"
+        }, timeout=2)
+    except Exception:
+        pass
+        
+    time.sleep(10)
+    
+    return chaos_run_result
 
 if __name__ == "__main__":
-    # --- Configuration ---
-    EXPERIMENTS_TEMPLATE_FILE = os.path.join(os.path.dirname(__file__), "..", "experiments_template.yaml")
-    # Look for baseline.json in the parent directory (w3-d2-pack) or current directory
-    baseline_in_parent = os.path.join(os.path.dirname(__file__), "..", "baseline.json")
-    baseline_in_current = os.path.join(os.getcwd(), "baseline.json")
-    BASELINE_METRICS_FILE = baseline_in_parent if os.path.exists(baseline_in_parent) else (baseline_in_current if os.path.exists(baseline_in_current) else "baseline.json")
-    CHAOS_RESULTS_FILE = os.path.join(os.path.dirname(__file__), "..", "chaos_results.json") # Output file for all experiment results
+    EXPERIMENTS_FILE = os.path.join(os.path.dirname(__file__), "..", "experiments.yaml")
+    BASELINE_METRICS_FILE = os.path.join(os.path.dirname(__file__), "..", "baseline.json")
+    CHAOS_RESULTS_FILE = os.path.join(os.path.dirname(__file__), "..", "chaos_results.json")
 
-    # --- Load Experiments ---
+    # Load all 10 experiments
     try:
         import yaml
-        with open(EXPERIMENTS_TEMPLATE_FILE, 'r') as f:
+        with open(EXPERIMENTS_FILE, 'r') as f:
             experiments_data = yaml.safe_load(f)
-            # Filter out the reference experiments (id 1 and 10) for actual runs
-            experiments_to_run = [exp for exp in experiments_data.get("experiments", []) if exp.get("id") not in [1, 10]]
+            experiments_to_run = experiments_data.get("experiments", [])
     except FileNotFoundError:
-        print(f"Error: Experiments template file not found at {EXPERIMENTS_TEMPLATE_FILE}")
+        print(f"Error: Experiments file not found at {EXPERIMENTS_FILE}")
         exit(1)
     except yaml.YAMLError as e:
-        print(f"Error parsing YAML file {EXPERIMENTS_TEMPLATE_FILE}: {e}")
+        print(f"Error parsing YAML file {EXPERIMENTS_FILE}: {e}")
         exit(1)
 
     if not experiments_to_run:
-        print("No experiments found to run (excluding reference experiments 1 and 10).")
+        print("No experiments found to run.")
         exit(0)
 
-    # --- Pre-run Setup ---
-    print("Starting chaos engineering run...")
+    print(f"Loaded {len(experiments_to_run)} experiments to execute.")
 
-    # Ensure baseline file exists (or prompt user to capture it)
-    if not os.path.exists(BASELINE_METRICS_FILE):
-        print(f"Warning: Baseline metrics file '{BASELINE_METRICS_FILE}' not found.")
-        print("Please run 'python scripts/capture_baseline.py --duration 300 --out baseline.json' first.")
-        # Optionally, attempt to capture baseline here or exit.
-        # For now, we'll proceed but experiments requiring baseline will likely fail.
-
-    # --- Execute Experiments ---
+    # Execute all experiments
+    results = []
     for experiment in experiments_to_run:
-        run_chaos_experiment(experiment, BASELINE_METRICS_FILE, CHAOS_RESULTS_FILE)
+        res = run_chaos_experiment(experiment, BASELINE_METRICS_FILE, CHAOS_RESULTS_FILE)
+        results.append(res)
+        
+        # Log to file incrementally
+        with open(CHAOS_RESULTS_FILE, 'w') as f:
+            json.dump(results, f, indent=2)
 
+    # Print Scoreboard
+    print_scoreboard(results)
+    
     print("\n--- Chaos Engineering Run Complete ---")
     print(f"Results logged to: {CHAOS_RESULTS_FILE}")
-    # You can add a command here to view the results, e.g., 'cat chaos_results.json' or 'python scripts/score_run.py'

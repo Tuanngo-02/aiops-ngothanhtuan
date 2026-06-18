@@ -32,7 +32,7 @@ async def read_root():
 async def health_check():
     return {"status": "ok"}
 
-@app.get("/process-payment")
+@app.post("/process-payment")
 async def process_payment():
     # Simulate payment processing time
     time.sleep(random.uniform(0.1, 0.5)) 
@@ -40,7 +40,8 @@ async def process_payment():
 
 @app.get("/metrics")
 async def metrics():
-    return generate_latest()
+    from fastapi import Response
+    return Response(content=generate_latest(), media_type="text/plain")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)

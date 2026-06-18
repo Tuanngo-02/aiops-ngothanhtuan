@@ -39,7 +39,8 @@ async def resolve_dns(hostname: str):
 
 @app.get("/metrics")
 async def metrics():
-    return generate_latest()
+    from fastapi import Response
+    return Response(content=generate_latest(), media_type="text/plain")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8008)

@@ -1,0 +1,60 @@
+blast_radius:
+  max_actions_per_minute: 5
+  max_restarts_per_service_per_hour: 3
+
+verify_thresholds:
+  # Base Prometheus URL
+  prometheus_url: "http://localhost:9090"
+  timeout_seconds: 60
+  poll_interval_seconds: 5
+  required_successes: 3
+  
+  # Queries and normal thresholds (from baseline.json logic)
+  # Assuming P99 latency < 200ms, error rate < 1%, instance up
+  queries:
+    HighLatency:
+      query: "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, service))"
+      operator: "<"
+      threshold: 0.200 # 200ms
+    HighErrorRate:
+      query: "sum(rate(http_requests_total{status=~\"5..\"}[1m])) by (service) / sum(rate(http_requests_total[1m])) by (service)"
+      operator: "<"
+      threshold: 0.01 # 1%
+    InstanceDown:
+      query: "up"
+      operator: "=="
+      threshold: 2.0
+
+runbook_map:
+  HighLatency: "runbooks/restart_service.sh"
+  HighErrorRate: "runbooks/clear_cache.sh"
+  InstanceDown: "runbooks/restart_service.sh"
+  TestHallucination: "runbooks/nonexistent_runbook.sh" # For test 6
+  MultiStepDeployAlert: "MULTI_STEP_DEPLOY" # Special flag for multi-step
+
+multi_step_map:
+  MULTI_STEP_DEPLOY:
+    - "runbooks/step_a.sh"
+    - "runbooks/step_b.sh"
+    - "runbooks/step_c.sh"
+
+multi_step_rollback_map:
+  "runbooks/step_a.sh": "runbooks/rollback_a.sh"
+  "runbooks/step_b.sh": "runbooks/rollback_b.sh"
+  "runbooks/step_c.sh": "runbooks/rollback_c.sh"
+
+rollback_map:
+  "runbooks/restart_service.sh": "runbooks/rollback_restart.sh"
+  "runbooks/clear_cache.sh": "runbooks/rollback_clear_cache.sh"
+
+registry:
+  - "runbooks/restart_service.sh"
+  - "runbooks/clear_cache.sh"
+  - "runbooks/rollback_restart.sh"
+  - "runbooks/rollback_clear_cache.sh"
+  - "runbooks/step_a.sh"
+  - "runbooks/step_b.sh"
+  - "runbooks/step_c.sh"
+  - "runbooks/rollback_a.sh"
+  - "runbooks/rollback_b.sh"
+  - "runbooks/rollback_c.sh"
