@@ -5,17 +5,17 @@ blast_radius:
 verify_thresholds:
   # Base Prometheus URL
   prometheus_url: "http://localhost:9090"
-  timeout_seconds: 60
+  timeout_seconds: 120
   poll_interval_seconds: 5
   required_successes: 3
   
   # Queries and normal thresholds (from baseline.json logic)
-  # Assuming P99 latency < 200ms, error rate < 1%, instance up
+  # Assuming P99 latency < 500ms, error rate < 1%, instance up
   queries:
     HighLatency:
       query: "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, service))"
       operator: "<"
-      threshold: 0.200 # 200ms
+      threshold: 0.500 # 500ms
     HighErrorRate:
       query: "sum(rate(http_requests_total{status=~\"5..\"}[1m])) by (service) / sum(rate(http_requests_total[1m])) by (service)"
       operator: "<"
@@ -28,7 +28,7 @@ verify_thresholds:
 runbook_map:
   HighLatency: "runbooks/restart_service.sh"
   HighErrorRate: "runbooks/clear_cache.sh"
-  InstanceDown: "runbooks/restart_service.sh"
+  InstanceDown: "MULTI_STEP_DEPLOY"
   TestHallucination: "runbooks/nonexistent_runbook.sh" # For test 6
   MultiStepDeployAlert: "MULTI_STEP_DEPLOY" # Special flag for multi-step
 

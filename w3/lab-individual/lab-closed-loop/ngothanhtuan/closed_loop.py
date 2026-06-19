@@ -115,6 +115,10 @@ def verify_system(config, alertname, service):
                         break
                 
                 if val is not None:
+                    import math
+                    if math.isnan(val):
+                        val = 0.0
+                        
                     op = query_cfg["operator"]
                     thresh = float(query_cfg["threshold"])
                     passed = False

@@ -249,3 +249,123 @@
 {"ts": 1781767749.6134815, "event_type": "DRY_RUN_PASS", "service": "inventory-svc", "action": "HighLatency", "result": "dry_run"}
 {"ts": 1781767749.614033, "event_type": "RUNBOOK_EXEC", "service": "inventory-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
 {"ts": 1781767753.0144856, "event_type": "ACTION_FAIL", "service": "inventory-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh", "error": ""}
+{"ts": 1781839959.1229773, "event_type": "POLL_ERROR", "service": "system", "action": "poll", "result": "error", "error": "HTTPConnectionPool(host='localhost', port=9093): Max retries exceeded with url: /api/v2/alerts (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=9093): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"}
+{"ts": 1781839978.2253783, "event_type": "POLL_ERROR", "service": "system", "action": "poll", "result": "error", "error": "HTTPConnectionPool(host='localhost', port=9093): Max retries exceeded with url: /api/v2/alerts (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=9093): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"}
+{"ts": 1781839997.3290014, "event_type": "POLL_ERROR", "service": "system", "action": "poll", "result": "error", "error": "HTTPConnectionPool(host='localhost', port=9093): Max retries exceeded with url: /api/v2/alerts (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=9093): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"}
+{"ts": 1781840335.658774, "event_type": "ALERT_DETECTED", "service": "payment-svc", "action": "HighLatency", "result": "detect"}
+{"ts": 1781840335.8432968, "event_type": "DRY_RUN_PASS", "service": "payment-svc", "action": "HighLatency", "result": "dry_run"}
+{"ts": 1781840335.8432968, "event_type": "RUNBOOK_EXEC", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781840347.204662, "event_type": "VERIFY_START", "service": "payment-svc", "action": "HighLatency", "result": "verify"}
+{"ts": 1781840407.451064, "event_type": "VERIFY_FAIL", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781840407.451064, "event_type": "ROLLBACK_TRIGGERED", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781840418.7419882, "event_type": "ROLLBACK_EXECUTED", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/rollback_restart.sh"}
+{"ts": 1781840817.3784976, "event_type": "ALERT_DETECTED", "service": "payment-svc", "action": "HighLatency", "result": "detect"}
+{"ts": 1781840817.5326538, "event_type": "DRY_RUN_PASS", "service": "payment-svc", "action": "HighLatency", "result": "dry_run"}
+{"ts": 1781840817.5326538, "event_type": "RUNBOOK_EXEC", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781840828.7968526, "event_type": "VERIFY_START", "service": "payment-svc", "action": "HighLatency", "result": "verify"}
+{"ts": 1781840949.3007233, "event_type": "VERIFY_FAIL", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781840949.3007233, "event_type": "ROLLBACK_TRIGGERED", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781840960.5351312, "event_type": "ROLLBACK_EXECUTED", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/rollback_restart.sh"}
+{"ts": 1781841148.482118, "event_type": "ALERT_DETECTED", "service": "payment-svc", "action": "HighLatency", "result": "detect"}
+{"ts": 1781841148.6644764, "event_type": "DRY_RUN_PASS", "service": "payment-svc", "action": "HighLatency", "result": "dry_run"}
+{"ts": 1781841148.6655834, "event_type": "RUNBOOK_EXEC", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781841159.8412423, "event_type": "VERIFY_START", "service": "payment-svc", "action": "HighLatency", "result": "verify"}
+{"ts": 1781841190.003568, "event_type": "ACTION_SUCCESS", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781841193.5323265, "event_type": "ALERT_DETECTED", "service": "payment-svc", "action": "HighLatency", "result": "detect"}
+{"ts": 1781841193.672363, "event_type": "DRY_RUN_PASS", "service": "payment-svc", "action": "HighLatency", "result": "dry_run"}
+{"ts": 1781841193.672363, "event_type": "RUNBOOK_EXEC", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781841204.9166584, "event_type": "VERIFY_START", "service": "payment-svc", "action": "HighLatency", "result": "verify"}
+{"ts": 1781841325.4201593, "event_type": "VERIFY_FAIL", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781841325.42163, "event_type": "ROLLBACK_TRIGGERED", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781841336.5109956, "event_type": "ROLLBACK_EXECUTED", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/rollback_restart.sh"}
+{"ts": 1781841734.2297177, "event_type": "ALERT_DETECTED", "service": "payment-svc", "action": "HighLatency", "result": "detect"}
+{"ts": 1781841734.382468, "event_type": "DRY_RUN_PASS", "service": "payment-svc", "action": "HighLatency", "result": "dry_run"}
+{"ts": 1781841734.382468, "event_type": "RUNBOOK_EXEC", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781841745.6216238, "event_type": "VERIFY_START", "service": "payment-svc", "action": "HighLatency", "result": "verify"}
+{"ts": 1781841755.6857963, "event_type": "ACTION_SUCCESS", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781841888.5106266, "event_type": "POLL_ERROR", "service": "system", "action": "poll", "result": "error", "error": "HTTPConnectionPool(host='localhost', port=9093): Max retries exceeded with url: /api/v2/alerts (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=9093): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"}
+{"ts": 1781842361.4107745, "event_type": "ALERT_DETECTED", "service": "checkout-svc", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781842361.5512185, "event_type": "DRY_RUN_PASS", "service": "checkout-svc", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781842361.5522044, "event_type": "RUNBOOK_EXEC", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781842362.21613, "event_type": "VERIFY_START", "service": "checkout-svc", "action": "InstanceDown", "result": "verify"}
+{"ts": 1781842482.7761955, "event_type": "VERIFY_FAIL", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781842482.7772257, "event_type": "ROLLBACK_TRIGGERED", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781842493.960207, "event_type": "ROLLBACK_EXECUTED", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/rollback_restart.sh"}
+{"ts": 1781842721.9056563, "event_type": "ALERT_DETECTED", "service": "checkout-svc", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781842722.0441093, "event_type": "DRY_RUN_PASS", "service": "checkout-svc", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781842722.0441093, "event_type": "RUNBOOK_EXEC", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781842722.6819007, "event_type": "VERIFY_START", "service": "checkout-svc", "action": "InstanceDown", "result": "verify"}
+{"ts": 1781842843.1744027, "event_type": "VERIFY_FAIL", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781842843.175417, "event_type": "ROLLBACK_TRIGGERED", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781842854.3738773, "event_type": "ROLLBACK_EXECUTED", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/rollback_restart.sh"}
+{"ts": 1781842962.1760662, "event_type": "ALERT_DETECTED", "service": "checkout-svc", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781842962.3233163, "event_type": "DRY_RUN_PASS", "service": "checkout-svc", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781842962.3233163, "event_type": "RUNBOOK_EXEC", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781842962.9690914, "event_type": "VERIFY_START", "service": "checkout-svc", "action": "InstanceDown", "result": "verify"}
+{"ts": 1781843083.4096718, "event_type": "VERIFY_FAIL", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781843083.4106865, "event_type": "ROLLBACK_TRIGGERED", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/restart_service.sh"}
+{"ts": 1781843094.5632994, "event_type": "ROLLBACK_EXECUTED", "service": "checkout-svc", "action": "InstanceDown", "result": "runbooks/rollback_restart.sh"}
+{"ts": 1781843094.5644147, "event_type": "CIRCUIT_OPEN", "service": "checkout-svc", "action": "InstanceDown", "result": "halt"}
+{"ts": 1781843610.8755538, "event_type": "ALERT_DETECTED", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843611.3163896, "event_type": "DRY_RUN_PASS", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781843611.3163896, "event_type": "RUNBOOK_EXEC", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_a.sh"}
+{"ts": 1781843611.4634466, "event_type": "RUNBOOK_EXEC", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_b.sh"}
+{"ts": 1781843611.6090522, "event_type": "RUNBOOK_EXEC", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_c.sh"}
+{"ts": 1781843611.7972417, "event_type": "TRANSACTIONAL_STEP_FAIL", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_c.sh", "completed_before_failure": ["runbooks/step_a.sh", "runbooks/step_b.sh"]}
+{"ts": 1781843611.7982411, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/rollback_b.sh"}
+{"ts": 1781843611.9396389, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/rollback_a.sh"}
+{"ts": 1781843612.0857918, "event_type": "TRANSACTIONAL_ROLLBACK_COMPLETE", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "rollback", "rolled_back": ["runbooks/rollback_b.sh", "runbooks/rollback_a.sh"]}
+{"ts": 1781843622.170756, "event_type": "ALERT_DETECTED", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843622.613708, "event_type": "DRY_RUN_PASS", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781843622.6147206, "event_type": "RUNBOOK_EXEC", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_a.sh"}
+{"ts": 1781843622.768953, "event_type": "RUNBOOK_EXEC", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_b.sh"}
+{"ts": 1781843622.91802, "event_type": "RUNBOOK_EXEC", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_c.sh"}
+{"ts": 1781843623.1028888, "event_type": "TRANSACTIONAL_STEP_FAIL", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/step_c.sh", "completed_before_failure": ["runbooks/step_a.sh", "runbooks/step_b.sh"]}
+{"ts": 1781843623.1028888, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/rollback_b.sh"}
+{"ts": 1781843623.255391, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "runbooks/rollback_a.sh"}
+{"ts": 1781843623.3991244, "event_type": "TRANSACTIONAL_ROLLBACK_COMPLETE", "service": "closed-loop-orchestrator", "action": "InstanceDown", "result": "rollback", "rolled_back": ["runbooks/rollback_b.sh", "runbooks/rollback_a.sh"]}
+{"ts": 1781843742.3447366, "event_type": "ALERT_DETECTED", "service": "api-gateway", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843742.7980108, "event_type": "DRY_RUN_PASS", "service": "api-gateway", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781843742.7980108, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_a.sh"}
+{"ts": 1781843742.9518955, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_b.sh"}
+{"ts": 1781843743.0950644, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_c.sh"}
+{"ts": 1781843743.2414408, "event_type": "TRANSACTIONAL_STEP_FAIL", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_c.sh", "completed_before_failure": ["runbooks/step_a.sh", "runbooks/step_b.sh"]}
+{"ts": 1781843743.2459502, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/rollback_b.sh"}
+{"ts": 1781843743.3918164, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/rollback_a.sh"}
+{"ts": 1781843743.5309243, "event_type": "TRANSACTIONAL_ROLLBACK_COMPLETE", "service": "api-gateway", "action": "InstanceDown", "result": "rollback", "rolled_back": ["runbooks/rollback_b.sh", "runbooks/rollback_a.sh"]}
+{"ts": 1781843757.3640594, "event_type": "ALERT_DETECTED", "service": "api-gateway", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843757.800387, "event_type": "DRY_RUN_PASS", "service": "api-gateway", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781843757.8013747, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_a.sh"}
+{"ts": 1781843757.9898689, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_b.sh"}
+{"ts": 1781843758.2963462, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_c.sh"}
+{"ts": 1781843758.4587052, "event_type": "TRANSACTIONAL_STEP_FAIL", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_c.sh", "completed_before_failure": ["runbooks/step_a.sh", "runbooks/step_b.sh"]}
+{"ts": 1781843758.4587052, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/rollback_b.sh"}
+{"ts": 1781843758.6019146, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/rollback_a.sh"}
+{"ts": 1781843758.755154, "event_type": "TRANSACTIONAL_ROLLBACK_COMPLETE", "service": "api-gateway", "action": "InstanceDown", "result": "rollback", "rolled_back": ["runbooks/rollback_b.sh", "runbooks/rollback_a.sh"]}
+{"ts": 1781843772.3799589, "event_type": "ALERT_DETECTED", "service": "api-gateway", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843772.3813696, "event_type": "BLAST_RADIUS_EXCEEDED", "service": "api-gateway", "action": "InstanceDown", "result": "escalate", "msg": "Max actions per minute exceeded"}
+{"ts": 1781843787.4070308, "event_type": "ALERT_DETECTED", "service": "api-gateway", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843787.4070308, "event_type": "BLAST_RADIUS_EXCEEDED", "service": "api-gateway", "action": "InstanceDown", "result": "escalate", "msg": "Max actions per minute exceeded"}
+{"ts": 1781843802.421214, "event_type": "ALERT_DETECTED", "service": "api-gateway", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843802.421214, "event_type": "BLAST_RADIUS_EXCEEDED", "service": "api-gateway", "action": "InstanceDown", "result": "escalate", "msg": "Max actions per minute exceeded"}
+{"ts": 1781843817.4433794, "event_type": "ALERT_DETECTED", "service": "api-gateway", "action": "InstanceDown", "result": "detect"}
+{"ts": 1781843817.8903935, "event_type": "DRY_RUN_PASS", "service": "api-gateway", "action": "InstanceDown", "result": "dry_run"}
+{"ts": 1781843817.8903935, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_a.sh"}
+{"ts": 1781843818.0555406, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_b.sh"}
+{"ts": 1781843818.2600322, "event_type": "RUNBOOK_EXEC", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_c.sh"}
+{"ts": 1781843818.42094, "event_type": "TRANSACTIONAL_STEP_FAIL", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/step_c.sh", "completed_before_failure": ["runbooks/step_a.sh", "runbooks/step_b.sh"]}
+{"ts": 1781843818.4227011, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/rollback_b.sh"}
+{"ts": 1781843818.5672643, "event_type": "TRANSACTIONAL_ROLLBACK_STEP", "service": "api-gateway", "action": "InstanceDown", "result": "runbooks/rollback_a.sh"}
+{"ts": 1781843818.716533, "event_type": "TRANSACTIONAL_ROLLBACK_COMPLETE", "service": "api-gateway", "action": "InstanceDown", "result": "rollback", "rolled_back": ["runbooks/rollback_b.sh", "runbooks/rollback_a.sh"]}
+{"ts": 1781843818.716533, "event_type": "CIRCUIT_OPEN", "service": "api-gateway", "action": "InstanceDown", "result": "halt"}
+{"ts": 1781843832.4678311, "event_type": "CIRCUIT_BREAKER_HALT", "service": "api-gateway", "action": "InstanceDown", "result": "halted", "msg": "Circuit breaker is OPEN"}
+{"ts": 1781845049.0403337, "event_type": "ALERT_DETECTED", "service": "payment-svc", "action": "HighLatency", "result": "detect"}
+{"ts": 1781845049.2311745, "event_type": "DRY_RUN_PASS", "service": "payment-svc", "action": "HighLatency", "result": "dry_run"}
+{"ts": 1781845049.2317214, "event_type": "RUNBOOK_EXEC", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781845060.3967848, "event_type": "VERIFY_START", "service": "payment-svc", "action": "HighLatency", "result": "verify"}
+{"ts": 1781845070.4871447, "event_type": "ACTION_SUCCESS", "service": "payment-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781845094.0964596, "event_type": "ALERT_DETECTED", "service": "inventory-svc", "action": "HighLatency", "result": "detect"}
+{"ts": 1781845094.2470162, "event_type": "DRY_RUN_PASS", "service": "inventory-svc", "action": "HighLatency", "result": "dry_run"}
+{"ts": 1781845094.2470162, "event_type": "RUNBOOK_EXEC", "service": "inventory-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}
+{"ts": 1781845105.5064464, "event_type": "VERIFY_START", "service": "inventory-svc", "action": "HighLatency", "result": "verify"}
+{"ts": 1781845115.5824816, "event_type": "ACTION_SUCCESS", "service": "inventory-svc", "action": "HighLatency", "result": "runbooks/restart_service.sh"}

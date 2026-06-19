@@ -44,7 +44,7 @@ services:
     container_name: ronki-payment-svc
     environment:
       SERVICE_NAME: payment-svc
-      BASE_LATENCY_MS: "600"
+      BASE_LATENCY_MS: "120"
       JITTER_MS: "20"
       FAIL_RATE: "0.02"
     ports: ["8082:8080"]

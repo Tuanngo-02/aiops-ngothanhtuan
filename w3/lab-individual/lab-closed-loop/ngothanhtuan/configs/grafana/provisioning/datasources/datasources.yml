@@ -17,6 +17,7 @@ datasources:
     uid: loki
     jsonData:
       maxLines: 1000
+      manageAlerts: false
 
   - name: Alertmanager
     type: alertmanager
