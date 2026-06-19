@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'services'
+    static_configs:
+      - targets:
+        - 'api-gateway:8080'
+        - 'payment-svc:8001'
+        - 'inventory-svc:8002'
+        - 'notification-svc:8003'
+        - 'checkout-svc:8004'
+        - 'auth-svc:8005'
+        - 'log-collector:8007'
+        - 'dns-resolver:8008'
+        - 'cache-svc:8009'
+        - 'frontend:80'
+        - 'prometheus:9090'
+        - 'alertmanager:9093'
